@@ -16,7 +16,7 @@ int main(){
 
     //Load the test file for reading capabilities.
     ifstream test;
-    test.open("../InputFiles/test.txt");
+    test.open("InputFiles/test.txt");
 
     int x, y;
 
