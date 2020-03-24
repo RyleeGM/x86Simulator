@@ -16,16 +16,21 @@ int main(){
 
     //Load the test file for reading capabilities.
     ifstream test;
-    test.open("test.txt");
+    test.open("../InputFiles/test.txt");
 
     int x, y;
 
     cout << "Is this working" << "\n";
 
-    test >> x >> y;
+    //If - the file opens then read in and print
+    //else - print error
+    if(test.good()){
+        test >> x >> y;
+        cout << x << y;
+        
+    } else {
+        cerr << "The file isn't there.\n";
+    }
 
-    cout << x << y;
-
-
-    return 10;
+    return 0;
 }

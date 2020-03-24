@@ -23,8 +23,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		59191674242A65C400ECB5ED /* x86Simulator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = x86Simulator; sourceTree = BUILT_PRODUCTS_DIR; };
 		59191677242A65C400ECB5ED /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		59BE94C8242A6B8300E24A50 /* test.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = test.txt; path = InputFiles/test.txt; sourceTree = SOURCE_ROOT; };
+		59BE94CD242A722500E24A50 /* x86Simulator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = x86Simulator; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,17 +42,50 @@
 		5919166B242A65C400ECB5ED = {
 			isa = PBXGroup;
 			children = (
-				59191677242A65C400ECB5ED /* main.cpp */,
-				59191675242A65C400ECB5ED /* Products */,
+				59BE94CC242A710B00E24A50 /* source */,
+				59BE94CD242A722500E24A50 /* x86Simulator */,
 			);
 			sourceTree = "<group>";
 		};
-		59191675242A65C400ECB5ED /* Products */ = {
+		59BE94C2242A6AC500E24A50 /* OutputFiles */ = {
 			isa = PBXGroup;
 			children = (
-				59191674242A65C400ECB5ED /* x86Simulator */,
 			);
-			name = Products;
+			path = OutputFiles;
+			sourceTree = "<group>";
+		};
+		59BE94C6242A6B1100E24A50 /* InputFiles */ = {
+			isa = PBXGroup;
+			children = (
+				59BE94C8242A6B8300E24A50 /* test.txt */,
+			);
+			path = InputFiles;
+			sourceTree = "<group>";
+		};
+		59BE94C7242A6B2200E24A50 /* SettingsFiles */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = SettingsFiles;
+			sourceTree = "<group>";
+		};
+		59BE94C9242A6DD600E24A50 /* bin */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = bin;
+			sourceTree = "<group>";
+		};
+		59BE94CC242A710B00E24A50 /* source */ = {
+			isa = PBXGroup;
+			children = (
+				59191677242A65C400ECB5ED /* main.cpp */,
+				59BE94C9242A6DD600E24A50 /* bin */,
+				59BE94C6242A6B1100E24A50 /* InputFiles */,
+				59BE94C7242A6B2200E24A50 /* SettingsFiles */,
+				59BE94C2242A6AC500E24A50 /* OutputFiles */,
+			);
+			path = source;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -71,7 +105,7 @@
 			);
 			name = x86Simulator;
 			productName = x86Simulator;
-			productReference = 59191674242A65C400ECB5ED /* x86Simulator */;
+			productReference = 59BE94CD242A722500E24A50 /* x86Simulator */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -97,7 +131,7 @@
 				Base,
 			);
 			mainGroup = 5919166B242A65C400ECB5ED;
-			productRefGroup = 59191675242A65C400ECB5ED /* Products */;
+			productRefGroup = 5919166B242A65C400ECB5ED;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
