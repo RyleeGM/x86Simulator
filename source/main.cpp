@@ -9,28 +9,38 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 
 using namespace std;
 
+bool header = 1;
+
 int main(){
 
-    //Load the test file for reading capabilities.
-    ifstream test;
+    //MARK: Variables
+    ifstream test;          //Test File.
+    bool header = true;     //Tells if header is present in file.
+    string nextString;      //Next String to be compared against.
+    
+    
+    //MARK: File Load and Setup
+    //Load the test file.
     test.open("InputFiles/test.txt");
 
-    int x, y;
-
-    cout << "Is this working" << "\n";
-
-    //If - the file opens then read in and print
-    //else - print error
-    if(test.good()){
-        test >> x >> y;
-        cout << x << y;
-        
-    } else {
-        cerr << "The file isn't there.\n";
+    //Check if the file failed to open.
+    if(test.fail()){
+        return 1;
     }
-
+    
+    //Peek to see if it is a header line.
+    //Clear the line if it is the header.
+    while(header){
+        if(!(isdigit(test.peek()))){
+            test.ignore(numeric_limits<streamsize>::max(), '\n');
+        } else {
+            header = false;
+        }
+    }
+    
     return 0;
 }

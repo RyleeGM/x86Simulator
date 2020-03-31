@@ -90,6 +90,7 @@
 				59191670242A65C400ECB5ED /* Sources */,
 				59191671242A65C400ECB5ED /* Frameworks */,
 				59191672242A65C400ECB5ED /* CopyFiles */,
+				59BE94D0242A771D00E24A50 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -131,6 +132,26 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		59BE94D0242A771D00E24A50 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncp ${BUILT_PRODUCTS_DIR}/x86Simulator ${PROJECT_DIR}\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		59191670242A65C400ECB5ED /* Sources */ = {
