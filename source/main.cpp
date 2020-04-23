@@ -42,5 +42,18 @@ int main(){
         }
     }
     
+//    int counterVal = 1;
+//    int insNum;
+//
+//    while(!test.eof()){
+//        test >> insNum;
+//        if(insNum != counterVal){
+//            cerr << "Error " << counterVal << "\n";
+//        }
+//        cerr << "Yes! " << counterVal << "\n";
+//        counterVal++;
+//        test.ignore(numeric_limits<streamsize>::max(), '\n');
+//    }
+    
     return 0;
 }
