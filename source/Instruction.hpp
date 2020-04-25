@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 class Instruction{
     
@@ -28,30 +29,58 @@ private:
     int num_Rep;    //Optional
     //Register Read
     int num_RegR;
-    int* reg_R_Name; //Optional
-    int* reg_R_Size; //Optional
+    std::vector<int> reg_R_Name; //Optional
+    std::vector<int> reg_R_Size; //Optional
     //Memory Read
     int num_MemR;
-    uint64_t* mem_R_Addr;   //Optional
-    int* mem_R_Size;        //Optional
+    std::vector<uint64_t> mem_R_Addr;   //Optional
+    std::vector<int> mem_R_Size;        //Optional
     //Memory Write
     int num_MemW;
-    uint64_t* mem_W_Addr;   //Optional
-    int* mem_W_Size;        //Optional
+    std::vector<uint64_t> mem_W_Addr;   //Optional
+    std::vector<int> mem_W_Size;        //Optional
     //Register Write
     int num_RegW;
-    int* reg_W_Name;        //Optional
-    int* reg_W_Size;        //Optional
+    std::vector<int> reg_W_Name;        //Optional
+    std::vector<int> reg_W_Size;        //Optional
+    
+    //Simulation State Variables
+    bool sidelined;
+    int recall;
+    int latency;
+    int recipLatency;
     
 public:
-    //Constructors
+    //Constructor
+    Instruction();
     Instruction(std::ifstream *insFile);
     
-    //Destructor
-    virtual ~Instruction();
+    //Accessor Methods
+    int largestRegR();
+    int largestMemR();
+    int largestMemW();
+    int largestRegW();
+    bool isProducer(std::vector<int> regs);
+    std::vector<uint64_t> getReadAddr();
+    int getRep();
+    
+    //State Accessors
+    int getLoadBlocks();
+    int getStoreBlocks();
+    bool isSidelined();
+    bool readyForRecall();
+    bool readyForCommit();
+    int getRecipLatency();
+    
+    //State Setters
+    void setSidelineStatus(bool status);
+    void setRecallTime(int time);
+    void setLatency(int lat);
+    void setRecipLatency(int recip);
     
     //Overloaded Operators
     friend std::ostream& operator<< (std::ostream& s, Instruction& ins);
+    void  operator-- ();
     
 };
 

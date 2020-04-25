@@ -10,11 +10,29 @@
 
 using namespace std;
 
-// Mark: - Constructors
+// MARK: - Constructors
+
+/**
+Default constructor that initializes the vectors and optional sizes to 0.
+ */
+Instruction::Instruction(){
+    num_RegR = 0;
+    reg_R_Name = vector<int>();
+    reg_R_Size = vector<int>();
+    num_MemR = 0;
+    mem_R_Addr = vector<uint64_t>();
+    mem_R_Size = vector<int>();
+    num_MemW = 0;
+    mem_W_Addr = vector<uint64_t>();
+    mem_W_Size = vector<int>();
+    num_RegW = 0;
+    reg_W_Name = vector<int>();
+    reg_W_Size = vector<int>();
+}
 
 /**
  Creates an instruction object
- This Function returns with the file after the new line.
+ Returns with the file set up for the next instruction.
  @param insFile     ifstream that can be used to get data from the trace.
  */
 Instruction::Instruction(ifstream *insFile){
@@ -31,55 +49,238 @@ Instruction::Instruction(ifstream *insFile){
     
     //Read in Read Registers and instantiate arrays.
     *insFile >> num_RegR;
-    reg_R_Name = new int [num_RegR];
-    reg_R_Size = new int [num_RegR];
+    reg_R_Name = vector<int>(num_RegR);
+    reg_R_Size = vector<int>(num_RegR);
     
     for(int i = 0; i < num_RegR; i++){
-        *insFile >> *(reg_R_Name + i) >> *(reg_R_Size + i);
+        *insFile >> reg_R_Name[i] >> reg_R_Size[i];
     }
     
     //Read in Memory Read and instantiate arrays.
     *insFile >> num_MemR;
-    mem_R_Addr = new uint64_t[num_MemR];
-    mem_R_Size = new int[num_MemR];
+    mem_R_Addr = vector<uint64_t>(num_MemR);
+    mem_R_Size = vector<int>(num_MemR);
     
     for(int i = 0; i < num_MemR; i++){
-        *insFile >> hex >> *(mem_R_Addr + i) >> *(mem_R_Size + i);
+        *insFile >> hex >> mem_R_Addr[i] >> mem_R_Size[i];
     }
     
     //Read in Memory Written and instantiate arrays.
     *insFile >> num_MemW;
-    mem_W_Addr = new uint64_t[num_MemW];
-    mem_W_Size = new int[num_MemW];
+    mem_W_Addr = vector<uint64_t>(num_MemW);
+    mem_W_Size = vector<int>(num_MemW);
     
     for(int i = 0; i < num_MemW; i++){
-        *insFile >> hex >> *(mem_W_Addr + i) >> *(mem_W_Size + i);
+        *insFile >> hex >> mem_W_Addr[i] >> mem_W_Size[i];
     }
     
     //Read in Written Registers and instantiate arrays.
     *insFile >> num_RegW;
-    reg_W_Name = new int [num_RegW];
-    reg_W_Size = new int [num_RegW];
+    reg_W_Name = vector<int>(num_RegW);
+    reg_W_Size = vector<int>(num_RegW);
     
     for(int i = 0; i < num_RegW; i++){
-        *insFile >> *(reg_W_Name + i) >> *(reg_W_Size + i);
+        *insFile >> reg_W_Name[i] >> reg_W_Size[i];
     }
+    
+    //Values set at instruction fetch time.
+    sidelined = false;
+    recall = 0;
+    latency = 0;
+    recipLatency = 0;
     
     return;
 }
 
+// MARK: - Accessors
 /**
- Delete the Instrction
+ Returns the size of the largest register read in bytes.
  */
-Instruction::~Instruction(){
-    delete reg_R_Size;
-    delete reg_R_Name;
-    delete mem_W_Addr;
-    delete mem_W_Size;
-    delete mem_R_Addr;
-    delete reg_W_Name;
-    delete reg_W_Size;
+int Instruction::largestRegR(){
+    
+    //Hold the largest size.
+    int largestSize = 0;
+    
+    //Iterate over the sizes keeping only the largest.
+    for(int i = 0; i < num_RegR; i++){
+        if(reg_R_Size[i] > largestSize){
+            largestSize = reg_R_Size[i];
+        }
+    }
+    
+    //Return the largest size that was seen.
+    return largestSize;
 }
+
+/**
+ Returns the size of the largest mem operand read in bytes.
+ */
+int Instruction::largestMemR(){
+    
+    //Hold the largest size.
+    int largestSize = 0;
+    
+    //Iterate over the sizes keeping only the largest.
+    for(int i = 0; i < num_MemR; i++){
+        if(mem_R_Size[i] > largestSize){
+            largestSize = mem_R_Size[i];
+        }
+    }
+
+    //Return the largest size.
+    return largestSize;
+}
+
+/**
+ Returns the size of the largest mem operand written in bytes.
+ */
+int Instruction::largestMemW(){
+    
+    //Hold the largest size.
+    int largestSize = 0;
+    
+    //Iterate over the sizes and keep only the largest.
+    for(int i = 0; i < num_MemW; i++){
+        if(mem_W_Size[i] > largestSize){
+            largestSize = mem_W_Size[i];
+        }
+    }
+    
+    //Return the largest size that was seen.
+    return largestSize;
+}
+
+/**
+ Returns the size of the largest register written in bytes.
+ @return largest    Largest register written in bytes.
+ */
+int Instruction::largestRegW(){
+    
+    //Hold the largest size.
+    int largestSize = 0;
+    
+    //Iterate over the sizes and keep only the largest.
+    for(int i = 0; i < num_RegW; i++){
+        if(reg_W_Size[i] > largestSize){
+            largestSize = reg_W_Size[i];
+        }
+    }
+    //Return the largest size that was seen.
+    return largestSize;
+}
+
+/**
+ @param regs      A list of register names to compare against.
+ @return producer   A bool describing if this instruction writes the passed registers.
+ */
+bool Instruction::isProducer(vector<int> regs){
+    //Iterate over registers written by this instruction.
+    for(int i = 0; i < num_RegW; i++){
+        //Compare each written reg to each register from consumer.
+        for(int j = 0; j < regs.size(); i++){
+            //If the registers are equal return true.
+            if(regs[j] == reg_W_Name[i]){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ @return memAddrs   A list of memory addresses read by the instruction.
+ */
+vector<uint64_t> Instruction::getReadAddr(){
+    return mem_R_Addr;
+}
+
+/**
+ @return repeat     The number of times this instruction repeats
+ */
+int Instruction::getRep(){
+    if(rep)
+        return num_Rep;
+    else
+        return 0;
+}
+
+// MARK: - State Accessors
+
+/**
+ @return loadBlocks     Returns load blocks needed for this instruction.
+ */
+int Instruction::getLoadBlocks(){
+    return num_MemR;
+}
+
+/**
+ @Return storeBlocks    Returns store blocks needed for this instruction.
+ */
+int Instruction::getStoreBlocks(){
+    return num_MemW;
+}
+
+/**
+ @return isSidelined    Returns a bool to describe if instruction is waiting for mem load.
+ */
+bool Instruction::isSidelined(){
+    return sidelined;
+}
+
+/**
+ @return ready      Returns a bool to describe if an instruction is ready to be executed after being sidelined.
+ */
+bool Instruction::readyForRecall(){
+    //If it isn't sidelined and there isn't time on the recall clock.
+    if(sidelined == false && recall == 0)
+        return true;
+    else
+        return false;
+}
+
+/**
+ @return ready  Returns a bool to describe if an instruction is ready to commit.
+ */
+bool Instruction::readyForCommit(){
+    //If there isn't time on the scoreboard.
+    if(latency == 0)
+        return true;
+    else
+        return false;
+}
+
+// MARK: - State Setters
+
+/**
+ @param status      A bool to describe the sideline status of the instruction.
+ */
+void Instruction::setSidelineStatus(bool status){
+    sidelined = status;
+}
+
+/**
+ @param time    an integer representation of the number of cyctles the instruction is supposed to be sidelined.
+ */
+void Instruction::setRecallTime(int time){
+    recall = time;
+}
+
+/**
+ @param lat     an integer to describe the amount of time the instruction needs to execute.
+ */
+void Instruction::setLatency(int lat){
+    latency = lat;
+}
+
+/**
+ @param recip   an integer to describe how many cycles before another independent instruction of the same type can be executed.
+ */
+void Instruction::setRecipLatency(int recip){
+    recipLatency = recip;
+}
+
+// MARK: - Destructor and Operators
+
 
 /**
  Print out the instruction as you would find it in the trace file.
@@ -101,4 +302,25 @@ ostream& operator<< (ostream& s, Instruction& ins){
     s << ins.num_MemW << " "  << ins.num_RegW << " ";
     
     return s;
+}
+
+/**
+ If the instruction is sidelined then decrement recall otherwise decrement latency.
+ Sets sidelined to false if the recall time is set to zero.
+ */
+void Instruction::operator-- (){
+    
+    //Check to see if the instruction is sidelined;
+    if(sidelined){
+        //Decrement the recall time.
+        recall = recall - 1;
+        //Check if still needs to be sidelined.
+        if(recall == 0){
+            sidelined = false;
+        }
+    } else {
+        //Decrement the latency and reciprical latency.
+        latency = latency - 1;
+        recipLatency = recipLatency - 1;
+    }
 }
