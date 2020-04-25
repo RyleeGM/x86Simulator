@@ -38,11 +38,21 @@ int main(){
     remHeader(&trace);
     remHeader(&instructions);
     
-    Instruction ins1 =      Instruction(&trace);
+    //Temporary Testing Region.
     
-    cout << ins1;
+    Instruction ins [10];
     
+    for(int i = 0; i < 10; i++){
+        ins[i] = Instruction(&trace);
+    }
     
+    for(int i = 0; i < 10; i++){
+        cout << ins[i] << "\n";
+    }
+    
+    cout << ins[1].isProducer(vector<int>{1, 2, 7, 25}) << "\n";
+    
+    //Temporary Testing Region end.
     
     //Close files for clean exit.
     test.close();
