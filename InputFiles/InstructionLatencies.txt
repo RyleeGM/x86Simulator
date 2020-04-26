@@ -415,7 +415,7 @@
 408 4 0.4 //MINSS
 409 0 1 //MONITOR - Unknown Latency -
 410 0 1 //MONITORX - Unknown Latency -
-411 -2 //MOV
+411 -2 1 //MOV
 412 1 0.25 //MOVAPD
 413 1 1 //MOVAPS
 414 1 1 //MOVBE - Latency Not Given -
