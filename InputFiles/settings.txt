@@ -9,4 +9,4 @@ variables about resources, and issue behavior.
 4   //Max Issue Width
 4   //Max Load Blocks
 4   //Max Store Blocks
-4   //Max ALU Blocks
+1   //1/0 isBlockingCache
