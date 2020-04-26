@@ -188,10 +188,36 @@ bool Instruction::isProducer(vector<int> regs){
 }
 
 /**
- @return memAddrs   A list of memory addresses read by the instruction.
+ @return memRAddrs   A list of memory addresses read by the instruction.
  */
 vector<uint64_t> Instruction::getReadAddr(){
-    return mem_R_Addr;
+    
+    //Make a copy to protect data.
+    vector<uint64_t> temp = mem_R_Addr;
+    
+    return temp;
+}
+
+/**
+ @return memWAddrs  A list of memory addresses written by the instruction.
+ */
+vector<uint64_t> Instruction::getWriteAddr(){
+    
+    //Make a copy to protect data.
+    vector<uint64_t> temp = mem_W_Addr;
+    
+    return temp;
+}
+
+/**
+ @return regNames   An array of the names of registers.
+ */
+vector<int> Instruction::getRegsRead(){
+    
+    //Make a copy to protect data.
+    vector<int> temp = reg_R_Name;
+    
+    return temp;
 }
 
 /**
@@ -203,6 +229,21 @@ int Instruction::getRep(){
     else
         return 0;
 }
+
+/**
+ @return    return the value of the reciprical latency.
+ */
+int Instruction::getRecipLatency(){
+    return recipLatency;
+}
+
+/**
+ @return    return integer value for the opcode.
+ */
+int Instruction::getOpcode(){
+    return opcode;
+}
+
 
 // MARK: - State Accessors
 
@@ -239,7 +280,7 @@ bool Instruction::readyForRecall(){
 }
 
 /**
- @return ready  Returns a bool to describe if an instruction is ready to commit.
+ @return    ready  Returns a bool to describe if an instruction is ready to commit.
  */
 bool Instruction::readyForCommit(){
     //If there isn't time on the scoreboard.
@@ -281,8 +322,7 @@ void Instruction::setRecipLatency(int recip){
     recipLatency = recip;
 }
 
-// MARK: - Destructor and Operators
-
+// MARK: - Operators
 
 /**
  Print out the instruction as you would find it in the trace file.

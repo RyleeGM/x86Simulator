@@ -62,7 +62,11 @@ public:
     int largestRegW();
     bool isProducer(std::vector<int> regs);
     std::vector<uint64_t> getReadAddr();
+    std::vector<uint64_t> getWriteAddr();
+    std::vector<int> getRegsRead();
     int getRep();
+    int getRecipLatency();
+    int getOpcode();
     
     //State Accessors
     int getLoadBlocks();
@@ -70,7 +74,6 @@ public:
     bool isSidelined();
     bool readyForRecall();
     bool readyForCommit();
-    int getRecipLatency();
     
     //State Setters
     void setSidelineStatus(bool status);
