@@ -10,6 +10,8 @@
 #define SimState_hpp
 
 #include <list>
+#include <queue>
+#include <tuple>
 #include "Instruction.hpp"
 
 class SimState{
@@ -18,28 +20,47 @@ private:
     //Master Lists for latency and reciprical latency.
     std::vector<int> latencyList;
     std::vector<int> recipLatencyList;
+    
     //List of instructions in the repective sections of the simulator.
-    std::list<Instruction> fetchedIns;
+    std::queue<Instruction> fetchedIns;
     std::list<Instruction> issuedIns;
+    
+    //Structure to manage cycles until next instruction of a given type.
+    std::list<std::tuple<int, int>> recipCount;
+    
     //User set variables from settings file.
-    int issueWidth;
     int fetchWidth;
+    int issueWidth;
     int loadBlocks;
     int storeBlocks;
     int aluBlocks;
+    bool isBlockingCache;
     //Variables to track resource availability.
     int availableStores;
     int availableLoads;
     int availableALU;
     
+    //Managing Function
+    void fetch();
+    void issue();
+    void commit();
+    void sideline();
+    
+    //Helper Functions
+    int getLatency(Instruction *ins);
+    
 public:
     //Constructors
-    SimState(std::ifstream *latFile);
+    SimState(std::ifstream *latFile, std::ifstream *setFile);
     
-    
-    
+    //Mutators
+    void changeSettings(std::ifstream *setFile);
+
+    //Initiation and Termination
+    void manager(std::ifstream *trace);
+    void cycle(std::ifstream *trace);
+    void reset();
+    void report();
 };
-
-
 
 #endif /* SimState_hpp */
