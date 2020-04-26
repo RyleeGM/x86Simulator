@@ -33,7 +33,7 @@ Instruction::Instruction(){
 /**
  Creates an instruction object
  Returns with the file set up for the next instruction.
- @param insFile     ifstream that can be used to get data from the trace.
+ @param insFile     ifstream that can be used to get data from the trace. Header must be pre-removed.
  */
 Instruction::Instruction(ifstream *insFile){
     
@@ -252,6 +252,7 @@ bool Instruction::readyForCommit(){
 // MARK: - State Setters
 
 /**
+ Note: A recall time should be set if an instruction is marked as sidelined.
  @param status      A bool to describe the sideline status of the instruction.
  */
 void Instruction::setSidelineStatus(bool status){
@@ -259,6 +260,7 @@ void Instruction::setSidelineStatus(bool status){
 }
 
 /**
+ Note: The sideline flag should be set when a recall value is set.
  @param time    an integer representation of the number of cyctles the instruction is supposed to be sidelined.
  */
 void Instruction::setRecallTime(int time){
