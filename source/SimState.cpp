@@ -25,6 +25,11 @@ void SimState::issue(){
     //Could issue up to the issue width of instructions.
     for(int i = 0; i < issueWidth; i++){
         
+        //Return if there are no instructions to consider.
+        if(fetchedIns.empty()){
+            return;
+        }
+        
         //Does the instruction at the head of the queue have a producer
         //in flieght.
         bool producerInPipeline = false;
@@ -70,8 +75,12 @@ void SimState::issue(){
             }
         }
         
+        if(producerInPipeline == true || hasFunctionalBlocksAvailable == false ||
+           bigRecipPass == false || smallRecipPass == false){
+            return;
+        }
         
-        
+        //Issue the instruction.
         
         
     }
@@ -169,6 +178,9 @@ void SimState::changeSettings(std::ifstream *setFile){
     setFile->ignore(numeric_limits<streamsize>::max(), '\n');
     
     *setFile >> isBlockingCache;
+    setFile->ignore(numeric_limits<streamsize>::max(), '\n');
+    
+    *setFile >> fetchBufferSize;
     setFile->ignore(numeric_limits<streamsize>::max(), '\n');
     
     return;

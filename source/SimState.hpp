@@ -35,6 +35,7 @@ private:
     int storeBlocks;
     int aluBlocks;
     bool isBlockingCache;
+    int fetchBufferSize;
     //Variables to track resource availability.
     int availableStores;
     int availableLoads;
