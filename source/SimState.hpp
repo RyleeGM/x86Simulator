@@ -61,6 +61,9 @@ public:
     void cycle(std::ifstream *trace);
     void reset();
     void report();
+    
+    //Latency Helper
+    void latencyHelper(Instruction *ins);
 };
 
 #endif /* SimState_hpp */

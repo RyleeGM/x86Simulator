@@ -14,6 +14,7 @@ using namespace std;
 
 /**
  This function manages the issue of instruction.
+ TODO: Finish this method after completeing the latency function.
  */
 void SimState::issue(){
     
@@ -21,9 +22,59 @@ void SimState::issue(){
     //-Needed to not break reciprical latency requirements-
     list<tuple<int,int>> instructionsThisCycle;
     
-    //Check if the first instruction in the buffer FIFO has a producer
-    //in progress.
-    issuedIns;
+    //Could issue up to the issue width of instructions.
+    for(int i = 0; i < issueWidth; i++){
+        
+        //Does the instruction at the head of the queue have a producer
+        //in flieght.
+        bool producerInPipeline = false;
+        bool hasFunctionalBlocksAvailable = true;
+        bool bigRecipPass = true;
+        bool smallRecipPass = true;
+        
+        //For every instruction in the issued list check if it is a producer
+        //for the instruction at the head of the queue.
+        for(list<Instruction>::iterator it = issuedIns.begin();
+            it != issuedIns.end(); ++it){
+            
+            if(it->isProducer(fetchedIns.front().getRegsRead())){
+                producerInPipeline = true;
+            }
+        }
+        
+        //Check if functional blocks are available.
+        if(availableLoads < fetchedIns.front().getLoadBlocks() &&
+           availableStores < fetchedIns.front().getStoreBlocks()){
+            
+            hasFunctionalBlocksAvailable = false;
+        }
+        
+        /*Check if issue would violate big recip limit.*/
+        //Iterate over the big list to check if it contains this instruction.
+        for(list<tuple<int,int>>::iterator it = recipCount.begin();
+            it != recipCount.end(); ++it){
+            
+            if(get<0>(*it) == fetchedIns.front().getOpcode()){
+                bigRecipPass = false;
+            }
+        }
+        
+        /*Check if issue would violate small recip limit*/
+        //Iteratr over the small list to check for this cycle.
+        for(list<tuple<int,int>>::iterator it = instructionsThisCycle.begin();
+            it != instructionsThisCycle.end(); ++it){
+            
+            if(get<0>(*it) == fetchedIns.front().getOpcode() &&
+               get<1>(*it) == 0){
+                smallRecipPass = false;
+            }
+        }
+        
+        
+        
+        
+        
+    }
     
 }
 
@@ -123,6 +174,162 @@ void SimState::changeSettings(std::ifstream *setFile){
     return;
 }
 
+// MARK: - Initiation and Termination
+
+//MARK: - Latency Helper
 /**
- This function will start and run the entire simulation until there are no more instructions in the trace.
+ This instruction takes an instruction as a parameter and correctly assigns its latency and reciprical latency.
+ @param ins     Instruction for which the latencies should be assined
  */
+void SimState::latencyHelper(Instruction *ins){
+    
+    //Get the latency to check for further analysis.
+    int tempLat = latencyList[ins->getOpcode()];
+    //Set reciprical latency regardless of further latency calcs.
+    ins->setRecipLatency(latencyList[ins->getOpcode()]);
+    
+    //Check for latency calculation or return.
+    if(ins->getRep() > 0){
+        ins->setLatency(ins->getRep());
+    }else if(tempLat >= 0){
+        ins->setLatency(tempLat);
+    } else {
+        //Switch for variable latencies.
+        switch(tempLat){
+            case -3 : //XCHG
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(23);
+                else
+                    ins->setLatency(2);
+                break;
+                
+            case -6 : //ADD/SUB/ADC/SBB/KADD
+                if((ins->largestMemR() + ins->largestMemW()) != 0)
+                    ins->setLatency(5);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -7 : //INC/DEC/NOT/NEG
+                if((ins->largestMemR() + ins->largestMemW()) != 0)
+                    ins->setLatency(6);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -8 : //DIV
+                if(ins->largestRegR() == 8)
+                    ins->setLatency(61);
+                else if(ins->largestRegR() == 4)
+                    ins->setLatency(26);
+                else
+                    ins->setLatency(23);
+                break;
+                
+            case -9 : //IDIV
+                if(ins->largestRegR() == 1)
+                    ins->setLatency(24);
+                else if(ins->largestRegR() == 2)
+                    ins->setLatency(23);
+                else if(ins->largestRegR() == 4)
+                    ins->setLatency(26);
+                else
+                    ins->setLatency(69);
+                break;
+                
+            case -10 : //AND/OR/XOR/KAND
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(5);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -13 : //FLD
+                if(ins->largestMemR() == 10)
+                    ins->setLatency(4);
+                else if(ins->largestMemR() != 0)
+                    ins->setLatency(3);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -15 : //FSTP
+                if(ins->largestMemR() == 10)
+                    ins->setLatency(4);
+                else if(ins->largestMemR() != 0)
+                    ins->setLatency(3);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -21 : //VPMASKMOVD/Q
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(4);
+                else
+                    ins->setLatency(14);
+                break;
+                
+            case -23 : //VPBROADCAST W/B
+                if(ins->largestMemR() < 16)
+                    ins->setLatency(7);
+                else
+                    ins->setLatency(2);
+                break;
+                
+            case -24 : //VPBroadcast Q/D
+                if(ins->largestMemR() < 16)
+                    ins->setLatency(4);
+                else
+                    ins->setLatency(3);
+                break;
+                
+            case -28 : //MOVHPS/MOVHLPS
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(4);
+                else
+                    ins->setLatency(3);
+                break;
+                
+            case -33 : //VEXTRACTF128
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(6);
+                else
+                    ins->setLatency(3);
+                break;
+                
+            case -34 : //INSERTPS
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(4);
+                else
+                    ins->setLatency(1);
+                break;
+                
+            case -35 : //VINSERTF128
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(5);
+                else
+                    ins->setLatency(3);
+                break;
+                
+            case -36 : //VMASKMOVPS/D
+                if(ins->largestMemR() != 0)
+                    ins->setLatency(13);
+                else
+                    ins->setLatency(3);
+                break;
+                
+            case -40 : //ENTER
+                ins->setLatency(87 + 2 * (ins->largestRegR()));
+                break;
+                
+            case -41 : //Repeat
+                if(ins->getRep() == 0)
+                    ins->setLatency(1);
+                else
+                    ins->setLatency(ins->getRep());
+                break;
+        }
+    }
+    
+    return;
+}
