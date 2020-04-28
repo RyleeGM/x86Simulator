@@ -15,6 +15,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "FileOperations.hpp"
 
 class Instruction{
     
@@ -48,7 +49,7 @@ private:
     bool sidelined;
     int recall;
     int latency;
-    int recipLatency;
+    float recipLatency;
     
 public:
     //Constructor
@@ -65,8 +66,9 @@ public:
     std::vector<uint64_t> getWriteAddr();
     std::vector<int> getRegsRead();
     int getRep();
-    int getRecipLatency();
+    float getRecipLatency();
     int getOpcode();
+    int getSize();
     
     //State Accessors
     int getLoadBlocks();
@@ -79,7 +81,7 @@ public:
     void setSidelineStatus(bool status);
     void setRecallTime(int time);
     void setLatency(int lat);
-    void setRecipLatency(int recip);
+    void setRecipLatency(float recip);
     
     //Overloaded Operators
     friend std::ostream& operator<< (std::ostream& s, Instruction& ins);

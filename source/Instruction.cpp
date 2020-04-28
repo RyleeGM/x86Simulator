@@ -38,22 +38,26 @@ Instruction::Instruction(){
 Instruction::Instruction(ifstream *insFile){
     
     //Read in the execution bit, instruction pointer, size and opcode.
-    *insFile >> execute >> hex >> instr_Ptr >> size >> opcode;
+    execute = getNextbool(insFile);
+    *insFile >> hex >> instr_Ptr;
+    size = getNextInt(insFile);
+    opcode = getNextInt(insFile);
     
     //Read in repeat.
-    *insFile >> rep;
+    rep = getNextbool(insFile);
     
     if(rep){
-        *insFile >> num_Rep;
+        num_Rep = getNextInt(insFile);
     }
     
     //Read in Read Registers and instantiate arrays.
-    *insFile >> num_RegR;
+    num_RegR = getNextInt(insFile);
     reg_R_Name = vector<int>(num_RegR);
     reg_R_Size = vector<int>(num_RegR);
     
     for(int i = 0; i < num_RegR; i++){
-        *insFile >> reg_R_Name[i] >> reg_R_Size[i];
+        reg_R_Name[i] = getNextInt(insFile);
+        reg_R_Size[i] = getNextInt(insFile);
     }
     
     //Read in Memory Read and instantiate arrays.
@@ -62,7 +66,8 @@ Instruction::Instruction(ifstream *insFile){
     mem_R_Size = vector<int>(num_MemR);
     
     for(int i = 0; i < num_MemR; i++){
-        *insFile >> hex >> mem_R_Addr[i] >> mem_R_Size[i];
+        *insFile >> mem_R_Addr[i];
+        mem_R_Size[i] = getNextInt(insFile);
     }
     
     //Read in Memory Written and instantiate arrays.
@@ -71,7 +76,8 @@ Instruction::Instruction(ifstream *insFile){
     mem_W_Size = vector<int>(num_MemW);
     
     for(int i = 0; i < num_MemW; i++){
-        *insFile >> hex >> mem_W_Addr[i] >> mem_W_Size[i];
+        *insFile >> mem_W_Addr[i];
+        mem_W_Size[i] = getNextInt(insFile);
     }
     
     //Read in Written Registers and instantiate arrays.
@@ -80,7 +86,8 @@ Instruction::Instruction(ifstream *insFile){
     reg_W_Size = vector<int>(num_RegW);
     
     for(int i = 0; i < num_RegW; i++){
-        *insFile >> reg_W_Name[i] >> reg_W_Size[i];
+        reg_W_Name[i] = getNextInt(insFile);
+        reg_W_Size[i] = getNextInt(insFile);
     }
     
     //Values set at instruction fetch time.
@@ -233,7 +240,7 @@ int Instruction::getRep(){
 /**
  @return    return the value of the reciprical latency.
  */
-int Instruction::getRecipLatency(){
+float Instruction::getRecipLatency(){
     return recipLatency;
 }
 
@@ -244,6 +251,13 @@ int Instruction::getOpcode(){
     return opcode;
 }
 
+/**
+ @return    returns the size of the instruction in bytes.
+ */
+int Instruction::getSize(){
+    
+    return size;
+}
 
 // MARK: - State Accessors
 
@@ -318,7 +332,7 @@ void Instruction::setLatency(int lat){
 /**
  @param recip   an integer to describe how many cycles before another independent instruction of the same type can be executed.
  */
-void Instruction::setRecipLatency(int recip){
+void Instruction::setRecipLatency(float recip){
     recipLatency = recip;
 }
 
