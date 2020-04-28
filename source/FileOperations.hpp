@@ -14,10 +14,10 @@
 #include <fstream>
 #include <string>
 
-/**
- Remove the header of a file.
- @param file        Pointer to file ifstream
- */
+
 void remHeader(std::ifstream *file);
+void remLine(std::ifstream *file);
+int getNextInt(std::ifstream *file);
+bool getNextbool(std::ifstream *file);
 
 #endif /* FileOperations_hpp */
