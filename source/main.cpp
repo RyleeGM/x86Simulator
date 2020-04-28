@@ -8,7 +8,6 @@
 //
 
 #include "SimState.hpp"
-#include "FileOperations.hpp"
 
 using namespace std;
 
@@ -20,7 +19,7 @@ int main(){
     ifstream test;          //Test File.
     ifstream trace;         //Trace File.
     ifstream latencies;     //File containing instuction data.
-    string nextString;      //Next String to be compared against.
+    ifstream settings;      //File containing the settings.
     
     
     //MARK: File Load and Setup
@@ -28,9 +27,10 @@ int main(){
     test.open("InputFiles/test.txt");
     trace.open("InputFiles/trace.out");
     latencies.open("InputFiles/InstructionLatencies.txt");
+    settings.open("InputFiles/settings.txt");
     
     //Check if any file failed to open.
-    if(test.fail() || trace.fail() || latencies.fail()){
+    if(test.fail() || trace.fail() || latencies.fail() || settings.fail()){
         cerr << "A File Failed to Open" << "\n" << "Exiting";
         return 1;
     }
@@ -39,10 +39,15 @@ int main(){
     remHeader(&test);
     remHeader(&trace);
     remHeader(&latencies);
+    remHeader(&settings);
     
-    //Temporary Testing Region.
+    SimState simulation = SimState(&latencies, &settings);
     
-    SimState simulator = SimState(&latencies);
+    int loopCounter = 0;
+    
+    while(loopCounter < 500){
+        simulation.cycle(&trace);
+    }
     
     //Temporary Testing Region end.
     
