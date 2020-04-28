@@ -13,8 +13,42 @@ using namespace std;
 // MARK: - Managing Functions
 
 /**
+ This function manages the fetch of instructions.
+ */
+void SimState::fetch(ifstream *trace){
+    
+    //Get some info to check if the instruction should be fetched.
+    int tempEXE;
+    uint64_t tempAddr;
+    int tempSize;
+    long int firstLoc, secondLoc;
+    
+    
+    //Loop a maximum of fetch width
+    for(int i = 0; i < fetchWidth; i++){
+        
+        //Gather test data
+        firstLoc = trace->tellg();
+        *trace >> tempEXE >> hex >> tempAddr >> tempSize;
+        secondLoc = trace->tellg();
+        
+        //Go back in the file
+        trace->seekg(firstLoc - secondLoc, (*trace).cur);
+        
+        //If the instruction doesn't execute skip it.
+        if(tempEXE == 0){
+            remLine(trace);
+        } else if (fetchBufferSize >= tempSize){
+            fetchedIns.push(Instruction(trace));
+            fetchBufferSize -= tempSize;
+        } else {
+            return;
+        }
+    }
+}
+
+/**
  This function manages the issue of instruction.
- TODO: Finish this method after completeing the latency function.
  */
 void SimState::issue(){
     
@@ -30,59 +64,65 @@ void SimState::issue(){
             return;
         }
         
-        //Does the instruction at the head of the queue have a producer
-        //in flieght.
-        bool producerInPipeline = false;
-        bool hasFunctionalBlocksAvailable = true;
-        bool bigRecipPass = true;
+        //Variables for test passage.
+        bool initialPass = checkIssueEligibility();
         bool smallRecipPass = true;
-        
-        //For every instruction in the issued list check if it is a producer
-        //for the instruction at the head of the queue.
-        for(list<Instruction>::iterator it = issuedIns.begin();
-            it != issuedIns.end(); ++it){
-            
-            if(it->isProducer(fetchedIns.front().getRegsRead())){
-                producerInPipeline = true;
-            }
-        }
-        
-        //Check if functional blocks are available.
-        if(availableLoads < fetchedIns.front().getLoadBlocks() &&
-           availableStores < fetchedIns.front().getStoreBlocks()){
-            
-            hasFunctionalBlocksAvailable = false;
-        }
-        
-        /*Check if issue would violate big recip limit.*/
-        //Iterate over the big list to check if it contains this instruction.
-        for(list<tuple<int,int>>::iterator it = recipCount.begin();
-            it != recipCount.end(); ++it){
-            
-            if(get<0>(*it) == fetchedIns.front().getOpcode()){
-                bigRecipPass = false;
-            }
-        }
         
         /*Check if issue would violate small recip limit*/
         //Iteratr over the small list to check for this cycle.
         for(list<tuple<int,int>>::iterator it = instructionsThisCycle.begin();
             it != instructionsThisCycle.end(); ++it){
             
-            if(get<0>(*it) == fetchedIns.front().getOpcode() &&
-               get<1>(*it) == 0){
-                smallRecipPass = false;
+            //Fail the test if it is there and has a value.
+            if(get<0>(*it) == fetchedIns.front().getOpcode()){
+                if(get<1>(*it) == 0){
+                    smallRecipPass = false;
+                }
             }
         }
-        
-        if(producerInPipeline == true || hasFunctionalBlocksAvailable == false ||
-           bigRecipPass == false || smallRecipPass == false){
+            
+        //Determine final issue eligibility.
+        if(smallRecipPass == false || initialPass == false){
             return;
         }
         
-        //Issue the instruction.
+        /*Issues the instructions*/
+        //Push instruction to the back of the issue list.
+        issuedIns.push_back(fetchedIns.front());
+        //Pop it off of the fetch queue.
+        fetchedIns.pop();
+        //Free up space used by that instruction.
+        fetchBufferSize += issuedIns.back().getSize();
+        //Assign latencies.
+        latencyHelper(&issuedIns.back());
         
+        //Add recip latency to the correct list.
+        float tempRecipLatency = issuedIns.back().getRecipLatency();
+        int tempOpcode = issuedIns.back().getOpcode();
         
+        //If the recip latency is less equal than 1, add to the cycle count.
+        //If the recip is greater than 1, add to the big recip Count.
+        if(tempRecipLatency > 1){
+            recipCount.push_back(tuple<int, int>(tempOpcode, (int)tempRecipLatency));
+        } else {
+            /*Check if the instruction type is already in the list.*/
+            
+            //Bool to determine if the instruction was found during iteration.
+            bool insFound = false;
+            
+            for(list<tuple<int,int>>::iterator it = instructionsThisCycle.begin();
+                it != instructionsThisCycle.end(); it++){
+                if(get<0>(*it) == tempOpcode){
+                    get<0>(*it) -= 1;
+                    insFound = true;
+                }
+            }
+            //Finaly decide if we put the instruction in the list.
+            if(insFound == false){
+                instructionsThisCycle.push_back(tuple<int, int>(tempOpcode,
+                                                (int)(1/tempRecipLatency)));
+            }
+        }
     }
     
 }
@@ -118,7 +158,7 @@ SimState::SimState(ifstream *latFile, ifstream *setFile){
     
     //Instantiates the latency vectors to 1587.
     latencyList = vector<int>(1587);
-    recipLatencyList = vector<int>(1587);
+    recipLatencyList = vector<float>(1587);
     
     //Set the 0th element of each list to zeros.
     latencyList[0] = 0;
@@ -187,6 +227,85 @@ void SimState::changeSettings(std::ifstream *setFile){
 }
 
 // MARK: - Initiation and Termination
+
+/**
+ Initiates one CPU cycle and returns on completion.
+ @param trace   takes the trace instructions to be fetched from.
+ */
+void SimState::cycle(ifstream *trace){
+    
+    //Call for commit.
+    commit();
+    //Call for issue.
+    issue();
+    //Call for fetch.
+    fetch(trace);
+    
+    //Decrement Latencies for issued instructions.
+    for(list<Instruction>::iterator it = issuedIns.begin();
+        it != issuedIns.end(); it++){
+        --(*it);
+    }
+    
+    //Decrement any recip latency that prevents continued instructions.
+    for(list<tuple<int, int>>::iterator it = recipCount.begin();
+        it != recipCount.end(); it++){
+        get<1>(*it) -= 1;
+    }
+    
+    //Increment reporting data.
+    cycleCount++;
+    
+}
+
+// MARK: - Issue Helper
+/**
+ Determines if an instruction is eligable to be issued pendin per cycle eligibility.
+ */
+bool SimState::checkIssueEligibility(){
+    
+            //Does the instruction at the head of the queue have a producer
+    //in flieght.
+    bool producerInPipeline = false;
+    bool hasFunctionalBlocksAvailable = true;
+    bool bigRecipPass = true;
+    bool decision = true;
+    
+    //For every instruction in the issued list check if it is a producer
+    //for the instruction at the head of the queue.
+    for(list<Instruction>::iterator it = issuedIns.begin();
+        it != issuedIns.end(); ++it){
+        
+        if(it->isProducer(fetchedIns.front().getRegsRead())){
+            producerInPipeline = true;
+        }
+    }
+    
+    //Check if functional blocks are available.
+    if(availableLoads < fetchedIns.front().getLoadBlocks() &&
+       availableStores < fetchedIns.front().getStoreBlocks()){
+        
+        hasFunctionalBlocksAvailable = false;
+    }
+    
+    /*Check if issue would violate big recip limit.*/
+    //Iterate over the big list to check if it contains this instruction.
+    for(list<tuple<int,int>>::iterator it = recipCount.begin();
+        it != recipCount.end(); ++it){
+        
+        if(get<0>(*it) == fetchedIns.front().getOpcode()){
+            bigRecipPass = false;
+        }
+    }
+    
+    //If any of the three tests fail.
+    if(producerInPipeline == true || hasFunctionalBlocksAvailable == false ||
+       bigRecipPass == false){
+        decision = false;
+    }
+    
+    return decision;
+}
 
 //MARK: - Latency Helper
 /**

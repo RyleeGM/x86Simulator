@@ -19,7 +19,7 @@ class SimState{
 private:
     //Master Lists for latency and reciprical latency.
     std::vector<int> latencyList;
-    std::vector<int> recipLatencyList;
+    std::vector<float> recipLatencyList;
     
     //List of instructions in the repective sections of the simulator.
     std::queue<Instruction> fetchedIns;
@@ -40,9 +40,11 @@ private:
     int availableStores;
     int availableLoads;
     int availableALU;
+    //Reporting Variables;
+    uint64_t cycleCount;
     
     //Managing Function
-    void fetch();
+    void fetch(std::ifstream *trace);
     void issue();
     void commit();
     void sideline();
@@ -62,6 +64,9 @@ public:
     void cycle(std::ifstream *trace);
     void reset();
     void report();
+    
+    //CommitHelper
+    bool checkIssueEligibility();
     
     //Latency Helper
     void latencyHelper(Instruction *ins);
