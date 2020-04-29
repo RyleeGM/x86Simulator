@@ -29,13 +29,17 @@ void SimState::fetch(ifstream *trace){
         
         //Gather test data
         firstLoc = trace->tellg();
-        *trace >> tempEXE >> hex >> tempAddr >> tempSize;
+        tempEXE = getNextbool(trace);
+        *trace >> hex >> tempAddr;
+        tempSize = getNextInt(trace);
         secondLoc = trace->tellg();
         
         //Go back in the file
         trace->seekg(firstLoc - secondLoc, (*trace).cur);
         
         //If the instruction doesn't execute skip it.
+        //If the instruction executes and has room in the buffer fetch it.
+        //Otherwise, stop fetching.
         if(tempEXE == 0){
             remLine(trace);
         } else if (fetchBufferSize >= tempSize){
@@ -132,7 +136,7 @@ void SimState::issue(){
  */
 void SimState::commit(){
     
-    for(list<Instruction>::iterator it = issuedIns.begin(); it != issuedIns.end(); it++){
+    for(list<Instruction>::iterator it = issuedIns.begin(); it != issuedIns.end();){
         //Check if instruction is ready for commit.
         if(it->readyForCommit()){
             //Release functional blocks
@@ -141,7 +145,10 @@ void SimState::commit(){
             availableALU += 1;
             
             //Remove from list.
-            issuedIns.erase(it);
+            it = issuedIns.erase(it);
+            completeIns += 1;
+        } else {
+            ++it;
         }
     }
     return;
@@ -163,6 +170,9 @@ SimState::SimState(ifstream *latFile, ifstream *setFile){
     //Set the 0th element of each list to zeros.
     latencyList[0] = 0;
     recipLatencyList[0] = 0;
+    
+    cycleCount = 0;
+    completeIns = 0;
     
     int indexChecker = 0;
     
@@ -249,8 +259,14 @@ void SimState::cycle(ifstream *trace){
     
     //Decrement any recip latency that prevents continued instructions.
     for(list<tuple<int, int>>::iterator it = recipCount.begin();
-        it != recipCount.end(); it++){
+        it != recipCount.end();){
         get<1>(*it) -= 1;
+        //If it gets to zero on this decrement then remove it.
+        if(get<1>(*it) == 0){
+            it = recipCount.erase(it);
+        } else {
+            it++;
+        }
     }
     
     //Increment reporting data.
@@ -317,7 +333,7 @@ void SimState::latencyHelper(Instruction *ins){
     //Get the latency to check for further analysis.
     int tempLat = latencyList[ins->getOpcode()];
     //Set reciprical latency regardless of further latency calcs.
-    ins->setRecipLatency(latencyList[ins->getOpcode()]);
+    ins->setRecipLatency(recipLatencyList[ins->getOpcode()]);
     
     //Check for latency calculation or return.
     if(ins->getRep() > 0){

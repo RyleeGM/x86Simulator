@@ -42,7 +42,7 @@ private:
     int availableALU;
     //Reporting Variables;
     uint64_t cycleCount;
-    
+    uint64_t completeIns;
     //Managing Function
     void fetch(std::ifstream *trace);
     void issue();
