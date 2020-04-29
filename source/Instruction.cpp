@@ -71,7 +71,7 @@ Instruction::Instruction(ifstream *insFile){
     }
     
     //Read in Memory Written and instantiate arrays.
-    *insFile >> num_MemW;
+    num_MemW = getNextInt(insFile);
     mem_W_Addr = vector<uint64_t>(num_MemW);
     mem_W_Size = vector<int>(num_MemW);
     
@@ -81,7 +81,7 @@ Instruction::Instruction(ifstream *insFile){
     }
     
     //Read in Written Registers and instantiate arrays.
-    *insFile >> num_RegW;
+    num_RegW = getNextInt(insFile);
     reg_W_Name = vector<int>(num_RegW);
     reg_W_Size = vector<int>(num_RegW);
     
@@ -181,10 +181,15 @@ int Instruction::largestRegW(){
  @return producer   A bool describing if this instruction writes the passed registers.
  */
 bool Instruction::isProducer(vector<int> regs){
+    
+    //If the this instruction has 0 latency then it is product is ready.
+    if(latency == 0){
+        return false;
+    }
     //Iterate over registers written by this instruction.
     for(int i = 0; i < num_RegW; i++){
         //Compare each written reg to each register from consumer.
-        for(int j = 0; j < regs.size(); i++){
+        for(int j = 0; j < regs.size(); j++){
             //If the registers are equal return true.
             if(regs[j] == reg_W_Name[i]){
                 return true;
@@ -376,7 +381,8 @@ void Instruction::operator-- (){
         }
     } else {
         //Decrement the latency and reciprical latency.
-        latency = latency - 1;
-        recipLatency = recipLatency - 1;
+        if(latency != 0){
+            latency = latency - 1;
+        }
     }
 }
