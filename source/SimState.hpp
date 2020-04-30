@@ -40,6 +40,7 @@ private:
     int availableStores;
     int availableLoads;
     int availableALU;
+    bool endFile;
     //Reporting Variables;
     uint64_t cycleCount;
     uint64_t completeIns;

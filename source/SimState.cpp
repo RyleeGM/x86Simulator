@@ -23,9 +23,19 @@ void SimState::fetch(ifstream *trace){
     int tempSize;
     long int firstLoc, secondLoc;
     
-    
     //Loop a maximum of fetch width
     for(int i = 0; i < fetchWidth; i++){
+        
+        //Check end of line.
+        if(trace->peek() == ' '){
+            trace->ignore(2);
+        }
+        
+        //Check end of trace
+        if(trace->peek() == '*'){
+            endFile = true;
+            return;
+        }
         
         //Gather test data
         firstLoc = trace->tellg();
@@ -43,8 +53,14 @@ void SimState::fetch(ifstream *trace){
         if(tempEXE == 0){
             remLine(trace);
         } else if (fetchBufferSize >= tempSize){
-            fetchedIns.push(Instruction(trace));
+            Instruction temp = Instruction(trace);
+            fetchedIns.push(temp);
             fetchBufferSize -= tempSize;
+            if(temp.isRep()){
+                for(int i = 0; i < (temp.getRep()); i++){
+                    remLine(trace);
+                }
+            }
         } else {
             return;
         }
@@ -100,6 +116,10 @@ void SimState::issue(){
         //Assign latencies.
         latencyHelper(&issuedIns.back());
         
+        //Check out functional blocks
+        availableStores -= issuedIns.back().getStoreBlocks();
+        availableLoads -= issuedIns.back().getLoadBlocks();
+        
         //Add recip latency to the correct list.
         float tempRecipLatency = issuedIns.back().getRecipLatency();
         int tempOpcode = issuedIns.back().getOpcode();
@@ -142,11 +162,13 @@ void SimState::commit(){
             //Release functional blocks
             availableLoads += it->getLoadBlocks();
             availableStores += it->getStoreBlocks();
-            availableALU += 1;
             
-            //Remove from list.
+            //Add instruction to completed.
+            completeIns += it->getRep();
+            
+            //Remove from list
             it = issuedIns.erase(it);
-            completeIns += 1;
+            
         } else {
             ++it;
         }
@@ -173,6 +195,7 @@ SimState::SimState(ifstream *latFile, ifstream *setFile){
     
     cycleCount = 0;
     completeIns = 0;
+    endFile = false;
     
     int indexChecker = 0;
     
@@ -239,6 +262,17 @@ void SimState::changeSettings(std::ifstream *setFile){
 // MARK: - Initiation and Termination
 
 /**
+ Initates the simulation and will run completely through and return.
+ @param trace   ifstream to file containing trace. No header.
+ */
+void SimState::manager(std::ifstream *trace){
+
+        while(!endFile || !(fetchedIns.empty()) || !(issuedIns.empty())){
+            cycle(trace);
+        }
+}
+
+/**
  Initiates one CPU cycle and returns on completion.
  @param trace   takes the trace instructions to be fetched from.
  */
@@ -249,8 +283,9 @@ void SimState::cycle(ifstream *trace){
     //Call for issue.
     issue();
     //Call for fetch.
-    fetch(trace);
-    
+    if(!endFile){
+        fetch(trace);
+    }
     //Decrement Latencies for issued instructions.
     for(list<Instruction>::iterator it = issuedIns.begin();
         it != issuedIns.end(); it++){
@@ -272,6 +307,30 @@ void SimState::cycle(ifstream *trace){
     //Increment reporting data.
     cycleCount++;
     
+}
+
+/**
+ Reset the state of the simulator.
+ */
+void SimState::reset(){
+    //Clear the cycle count and number of complete instructions
+    cycleCount = 0;
+    completeIns = 0;
+    
+    //Clear the arch list and queues
+    fetchedIns = {};
+    issuedIns.clear();
+    recipCount.clear();
+}
+
+/**
+ Prints a short report to the console.
+ */
+void SimState::report(){
+    cout << "Instructions Completed: " << completeIns << "\n";
+    cout << "Total Cycles: " << cycleCount << "\n";
+    if(cycleCount != 0)
+        cout << "IPC: " << ((float)completeIns)/cycleCount << "\n";
 }
 
 // MARK: - Issue Helper
@@ -336,7 +395,7 @@ void SimState::latencyHelper(Instruction *ins){
     ins->setRecipLatency(recipLatencyList[ins->getOpcode()]);
     
     //Check for latency calculation or return.
-    if(ins->getRep() > 0){
+    if(ins->isRep()){
         ins->setLatency(ins->getRep());
     }else if(tempLat >= 0){
         ins->setLatency(tempLat);
