@@ -11,4 +11,4 @@ variables about resources, and issue behavior.
 4   //Max Store Blocks
 4   //ALU blocks *not currently used*
 1   //1/0 isBlockingCache
-10  //Fetch Buffer Size
+20  //Fetch Buffer Size
