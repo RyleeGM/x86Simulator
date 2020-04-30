@@ -233,20 +233,34 @@ vector<int> Instruction::getRegsRead(){
 }
 
 /**
+ @return rep    A boolean to determine if the instruction repeats.
+ */
+bool Instruction::isRep(){
+    return rep;
+}
+
+/**
  @return repeat     The number of times this instruction repeats
  */
 int Instruction::getRep(){
     if(rep)
         return num_Rep;
     else
-        return 0;
+        return 1;
 }
 
 /**
- @return    return the value of the reciprical latency.
+ @return  recipLatency  return the value of the reciprical latency.
  */
 float Instruction::getRecipLatency(){
     return recipLatency;
+}
+
+/**
+ @return latency    return the instruction latency.
+ */
+int Instruction::getLatency(){
+    return latency;
 }
 
 /**

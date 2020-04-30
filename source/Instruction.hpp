@@ -65,8 +65,10 @@ public:
     std::vector<uint64_t> getReadAddr();
     std::vector<uint64_t> getWriteAddr();
     std::vector<int> getRegsRead();
+    bool isRep();
     int getRep();
     float getRecipLatency();
+    int getLatency();
     int getOpcode();
     int getSize();
     
