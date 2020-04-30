@@ -43,13 +43,8 @@ int main(){
     
     SimState simulation = SimState(&latencies, &settings);
     
-    int loopCounter = 0;
-    
-    while(loopCounter < 500){
-        simulation.cycle(&trace);
-    }
-    
-    //Temporary Testing Region end.
+    simulation.manager(&trace);
+    simulation.report();
     
     //Close files for clean exit.
     test.close();
