@@ -29,7 +29,6 @@
 		59168FA12434EB0C0074527E /* Instruction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Instruction.cpp; sourceTree = "<group>"; };
 		59168FA22434EB0C0074527E /* Instruction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Instruction.hpp; sourceTree = "<group>"; };
 		59191677242A65C400ECB5ED /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		59BE94C8242A6B8300E24A50 /* test.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = test.txt; path = InputFiles/test.txt; sourceTree = SOURCE_ROOT; };
 		59BE94CE242A749500E24A50 /* x86Simulator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = x86Simulator; sourceTree = BUILT_PRODUCTS_DIR; };
 		59CF553D245201E2006017F0 /* InstructionLatencies.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = InstructionLatencies.txt; path = InputFiles/InstructionLatencies.txt; sourceTree = SOURCE_ROOT; };
 		59CF553E2453D951006017F0 /* FileOperations.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileOperations.cpp; sourceTree = "<group>"; };
@@ -72,7 +71,6 @@
 		59BE94C6242A6B1100E24A50 /* InputFiles */ = {
 			isa = PBXGroup;
 			children = (
-				59BE94C8242A6B8300E24A50 /* test.txt */,
 				59CF553D245201E2006017F0 /* InstructionLatencies.txt */,
 				59CF55412453DDA0006017F0 /* trace.out */,
 				59CF55452455C2F1006017F0 /* settings.txt */,
